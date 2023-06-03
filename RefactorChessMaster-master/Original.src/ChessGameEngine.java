@@ -241,72 +241,77 @@ public class ChessGameEngine{
      * @param e
      *            the mouse event from the listener
      */
-    public void determineActionFromSquareClick( MouseEvent e ){
-        BoardSquare squareClicked = (BoardSquare)e.getSource();
+    
+    /*
+      Code Smell identificado: Long Method
+      ¿Por qué era un code smell?: Había poca legibilidad y comprensión del código (alta complejidad cognitiva)
+      Aplicado en: método 'determineActionFromSquareClick(MouseEvent e)
+      Técnica de refactorización: 'extract method'.
+      --- Alumno: Juan Martín Domínguez Matos (19200275) ---
+    */
+    
+    // INICIO REFACTORIZACIÓN
+    
+    // Método para determinar la acción a ejecutar en el programa tras hacer click en un cuadrante del tablero
+    public void determineActionFromSquareClick(MouseEvent e) {
+        BoardSquare squareClicked = (BoardSquare) e.getSource();
         ChessGamePiece pieceOnSquare = squareClicked.getPieceOnSquare();
         board.clearColorsOnBoard();
-        if ( firstClick ){
-            currentPiece = squareClicked.getPieceOnSquare();
-            if ( selectedPieceIsValid() ){
-                currentPiece.showLegalMoves( board );
-                squareClicked.setBackground( Color.GREEN );
-                firstClick = false;
-            }
-            else
-            {
-                if ( currentPiece != null ){
-                    JOptionPane.showMessageDialog(
-                        squareClicked,
-                        "You tried to pick up the other player's piece! "
-                            + "Get some glasses and pick a valid square.",
-                        "Illegal move",
-                        JOptionPane.ERROR_MESSAGE );
-                }
-                else
-                {
-                    JOptionPane.showMessageDialog(
-                        squareClicked,
-                        "You tried to pick up an empty square! "
-                            + "Get some glasses and pick a valid square.",
-                        "Illegal move",
-                        JOptionPane.ERROR_MESSAGE );
-                }
-            }
-        }
-        else
-        {
-            if ( pieceOnSquare == null ||
-                !pieceOnSquare.equals( currentPiece ) ) // moving
-            {
-                boolean moveSuccessful =
-                    currentPiece.move(
-                        board,
-                        squareClicked.getRow(),
-                        squareClicked.getColumn() );
-                if ( moveSuccessful ){
-                    checkGameConditions();
-                }
-                else
-                {
-                    int row = squareClicked.getRow();
-                    int col = squareClicked.getColumn();
-                    JOptionPane.showMessageDialog(
-                        squareClicked,
-                        "The move to row " + ( row + 1 ) + " and column "
-                            + ( col + 1 )
-                            + " is either not valid or not legal "
-                            + "for this piece. Choose another move location, "
-                            + "and try using your brain this time!",
-                        "Invalid move",
-                        JOptionPane.ERROR_MESSAGE );
-                }
-                firstClick = true;
-            }
-            else
-            // user is just unselecting the current piece
-            {
-                firstClick = true;
-            }
+
+        if (firstClick) {
+            handleFirstClick(squareClicked);
+        } else {
+            handleSecondClick(squareClicked, pieceOnSquare);
         }
     }
+    
+    // Método para manejar primer click en el tablero
+    private void handleFirstClick(BoardSquare squareClicked) {
+        currentPiece = squareClicked.getPieceOnSquare();
+        if (selectedPieceIsValid()) { // si se escoge una pieza válida
+            currentPiece.showLegalMoves(board);
+            squareClicked.setBackground(Color.GREEN);
+            firstClick = false;
+        } else { // si no se escoge una pieza válida
+            handleInvalidPieceSelection(squareClicked);
+        }
+    }
+
+    // Método para manejar selección de pieza inválida
+    private void handleInvalidPieceSelection(BoardSquare squareClicked) {
+        String message;
+        if (currentPiece != null) { // selección de pieza del otro jugador
+            message = "You tried to pick up the other player's piece! Get some glasses and pick a valid square.";
+        } else { // selección de un cuadrante vacío (sin pieza)
+            message = "You tried to pick up an empty square! Get some glasses and pick a valid square.";
+        }
+        JOptionPane.showMessageDialog(squareClicked, message, "Illegal move", JOptionPane.ERROR_MESSAGE);
+    }
+
+    // Método para manejar segundo click en el tablero
+    private void handleSecondClick(BoardSquare squareClicked, ChessGamePiece pieceOnSquare) {
+        if (pieceOnSquare == null || !pieceOnSquare.equals(currentPiece)) { // verifica cuadrante a mover sea vacío o no sea el mismo cuadrante
+            boolean moveSuccessful = currentPiece.move(board, squareClicked.getRow(), squareClicked.getColumn());
+            if (moveSuccessful) { // se verifica reglas de movimiento de la pieza
+                checkGameConditions();
+            } else {
+                handleInvalidMove(squareClicked);
+            }
+            firstClick = true;
+        } else {
+            // User is just unselecting the current piece
+            firstClick = true;
+        }
+    }
+
+    // Método para manejar movimientos de pieza inválidos
+    private void handleInvalidMove(BoardSquare squareClicked) {
+        int row = squareClicked.getRow();
+        int col = squareClicked.getColumn();
+        String message = "The move to row " + (row + 1) + " and column " + (col + 1)
+                + " is either not valid or not legal for this piece. Choose another move location, and try using your brain this time!";
+        JOptionPane.showMessageDialog(squareClicked, message, "Invalid move", JOptionPane.ERROR_MESSAGE);
+    }
+    
+    // FIN REFACTORIZACIÓN
 }
