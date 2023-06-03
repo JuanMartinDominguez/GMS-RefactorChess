@@ -68,55 +68,60 @@ public class Pawn
      *            the game board to calculate moves on
      * @return ArrayList<String> the moves
      */
+    
+    /*
+      Code Smell identificado: Long Method
+      ¿Por qué era un code smell?: Había poca legibilidad y comprensión del código (alta complejidad cognitiva)
+      Aplicado en: método 'calculatePossibleMoves(ChessGameBoard board)
+      Técnica de refactorización: 'extract method'.
+      --- Alumno: Juan Martín Domínguez Matos (19200275) ---
+   */
+    
+    // INICIO REFACTORIZACIÓN
+    
     @Override
-    protected ArrayList<String> calculatePossibleMoves( ChessGameBoard board ){
+    // Método para calcular los posibles movimientos en el tablero
+    protected ArrayList<String> calculatePossibleMoves(ChessGameBoard board) {
         ArrayList<String> moves = new ArrayList<String>();
-        if ( isPieceOnScreen() ){
-            int currRow =
-                getColorOfPiece() == ChessGamePiece.WHITE
-                    ? ( pieceRow - 1 )
-                    : ( pieceRow + 1 );
-            int count = 1;
-            int maxIter = notMoved ? 2 : 1;
-            // check for normal moves
-            while ( count <= maxIter ){ // only loop while we have open slots and have not passed our
-              // limit
-                if ( isOnScreen( currRow, pieceColumn )
-                    && board.getCell( currRow,
-                        pieceColumn ).getPieceOnSquare() == null ){
-                    moves.add( currRow + "," + pieceColumn );
-                }
-                else
-                {
-                    break;
-                }
-                currRow =
-                    ( getColorOfPiece() == ChessGamePiece.WHITE )
-                        ? ( currRow - 1 )
-                        : ( currRow + 1 );
-                count++;
-            }
-            // check for enemy capture points
-            if ( getColorOfPiece() == ChessGamePiece.WHITE ){
-                if ( isEnemy( board, pieceRow - 1, pieceColumn - 1 ) ){
-                    moves.add( ( pieceRow - 1 ) + "," + ( pieceColumn - 1 ) );
-                }
-                if ( isEnemy( board, pieceRow - 1, pieceColumn + 1 ) ){
-                    moves.add( ( pieceRow - 1 ) + "," + ( pieceColumn + 1 ) );
-                }
-            }
-            else
-            {
-                if ( isEnemy( board, pieceRow + 1, pieceColumn - 1 ) ){
-                    moves.add( ( pieceRow + 1 ) + "," + ( pieceColumn - 1 ) );
-                }
-                if ( isEnemy( board, pieceRow + 1, pieceColumn + 1 ) ){
-                    moves.add( ( pieceRow + 1 ) + "," + ( pieceColumn + 1 ) );
-                }
-            }
+        if (isPieceOnScreen()) {
+            calculateNormalMoves(board, moves);
+            calculateEnemyCaptureMoves(board, moves);
         }
         return moves;
     }
+
+    // Método para calcular los movimientos permitidos del peón
+    private void calculateNormalMoves(ChessGameBoard board, ArrayList<String> moves) {
+        int currRow = getColorOfPiece() == ChessGamePiece.WHITE ? (pieceRow - 1) : (pieceRow + 1);
+        int count = 1;
+        int maxIter = notMoved ? 2 : 1;
+        while (count <= maxIter && isOnScreen(currRow, pieceColumn) && board.getCell(currRow, pieceColumn).getPieceOnSquare() == null) {
+            moves.add(currRow + "," + pieceColumn);
+            currRow = getColorOfPiece() == ChessGamePiece.WHITE ? (currRow - 1) : (currRow + 1);
+            count++;
+        }
+    }
+
+    // Método para mostrar las capturas que puede hacer el peón
+    private void calculateEnemyCaptureMoves(ChessGameBoard board, ArrayList<String> moves) {
+        if (getColorOfPiece() == ChessGamePiece.WHITE) {
+            addEnemyCaptureMove(board, moves, pieceRow - 1, pieceColumn - 1);
+            addEnemyCaptureMove(board, moves, pieceRow - 1, pieceColumn + 1);
+        } else {
+            addEnemyCaptureMove(board, moves, pieceRow + 1, pieceColumn - 1);
+            addEnemyCaptureMove(board, moves, pieceRow + 1, pieceColumn + 1);
+        }
+    }
+
+    // Método para mostrar en consola el movimiento de captura del peón
+    private void addEnemyCaptureMove(ChessGameBoard board, ArrayList<String> moves, int row, int column) {
+        if (isEnemy(board, row, column)) {
+            moves.add(row + "," + column);
+        }
+    }
+
+    // FIN REFACTORIZACIÓN
+    
     /**
      * Creates an icon for this piece depending on the piece's color.
      *
